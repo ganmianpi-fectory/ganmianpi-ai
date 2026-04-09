@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>智造·擀面皮工厂 | DeepSeek AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { background: linear-gradient(145deg, #FEFAF5 0%, #FFF3E8 100%); }
+        .glass-card { background: rgba(255,255,250,0.96); border-radius: 2rem; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08); border: 1px solid rgba(255,210,170,0.5); }
+        .btn-grad { background: linear-gradient(105deg, #E63946 0%, #C72A3A 100%); transition: all 0.2s; }
+        .btn-grad:active { transform: scale(0.97); }
+        .btn-grad:disabled { opacity: 0.6; cursor: not-allowed; }
+        .stat-card { background: white; border-radius: 1.5rem; border: 1px solid #FFE0D0; cursor: pointer; transition: all 0.2s; }
+        .stat-card:active { transform: scale(0.97); }
+        .chat-bubble-user { background: linear-gradient(135deg, #E63946, #F45B6B); color: white; border-radius: 24px 24px 8px 24px; }
+        .chat-bubble-bot { background: #FEF3E8; border: 1px solid #FFD1B5; border-radius: 24px 24px 24px 8px; }
+        select, input { background-color: #FFFCF8; border: 1px solid #FFD9C4; border-radius: 1rem; padding: 0.7rem; }
+        select:focus, input:focus { border-color: #E63946; outline: none; box-shadow: 0 0 0 3px rgba(230,57,70,0.1); }
+        .region-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; }
+        .region-select { flex: 1; min-width: 130px; }
+        @media (max-width: 640px) { .region-select { min-width: 100%; } }
+    </style>
+</head>
+<body>
+
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-amber-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 flex items-center justify-center shadow-md"><i class="fa fa-microchip text-white text-xl"></i></div>
+                <h1 class="text-xl sm:text-2xl font-black"><span class="bg-clip-text text-transparent bg-gradient-to-r from-rose-700 to-amber-700">智造·擀面皮工厂</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 ml-2 px-2 py-0.5 rounded-full">DeepSeek AI</span></h1>
+            </div>
+            <div class="flex gap-2 bg-amber-50/80 p-1.5 rounded-2xl">
+                <button id="langZh" class="lang-btn px-3 py-1.5 text-sm font-bold rounded-xl shadow-sm bg-rose-600 text-white">🇨🇳 中文</button>
+                <button id="langEn" class="lang-btn px-3 py-1.5 text-sm font-bold rounded-xl">🇬🇧 EN</button>
+                <button id="langMs" class="lang-btn px-3 py-1.5 text-sm font-bold rounded-xl">🇲🇾 MS</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="stat-card p-4 border-l-8 border-l-rose-500" data-kpi="capacity"><div class="text-xs text-gray-500">📊 今日预估产能</div><div class="text-2xl font-black" id="capacityValue">2,860 <span class="text-sm">kg</span></div><div class="text-xs text-emerald-600">+15.2%</div></div>
+            <div class="stat-card p-4 border-l-8 border-l-amber-500" data-kpi="orders"><div class="text-xs text-gray-500">🌏 出口活跃国</div><div class="text-2xl font-black" id="orderCount">42 <span class="text-sm">个地区</span></div><div class="text-xs text-amber-600">持续增长</div></div>
+            <div class="stat-card p-4 border-l-8 border-l-emerald-500"><div class="text-xs text-gray-500">🧬 AI引擎</div><div class="text-2xl font-black">DeepSeek</div><div class="text-xs text-emerald-600">大语言模型</div></div>
+            <div class="stat-card p-4 border-l-8 border-l-sky-500"><div class="text-xs text-gray-500">⚡ 响应速度</div><div class="text-2xl font-black">&lt;2秒</div><div class="text-xs text-sky-600">实时生成</div></div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div class="grid lg:grid-cols-5 gap-8">
+            <div class="lg:col-span-3 space-y-7">
+                <div class="glass-card p-5 md:p-6">
+                    <h2 class="text-xl font-black text-gray-800 mb-4">🧠 DeepSeek AI 配方引擎</h2>
+                    <div class="mb-4">
+                        <label class="text-sm font-bold">🌍 目标国家</label>
+                        <select id="globalCountry" class="w-full mt-1 rounded-xl">
+                            <option value="中国">🇨🇳 中国</option><option value="马来西亚">🇲🇾 马来西亚</option>
+                            <option value="新加坡">🇸🇬 新加坡</option><option value="泰国">🇹🇭 泰国</option>
+                            <option value="日本">🇯🇵 日本</option><option value="美国">🇺🇸 美国</option>
+                            <option value="英国">🇬🇧 英国</option><option value="澳大利亚">🇦🇺 澳大利亚</option>
+                        </select>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5 mb-5">
+                        <div><label class="text-sm font-bold">🔥 风味曲线</label><select id="tastePref" class="w-full mt-1 rounded-xl"><option>甜辣</option><option>微辣</option><option>香辣</option><option>清淡</option></select></div>
+                        <div><label class="text-sm font-bold">⚖️ 批次重量 (kg)</label><input type="number" id="batchWeight" value="100" class="w-full mt-1 rounded-xl"></div>
+                        <div><label class="text-sm font-bold">📏 面皮厚度 (mm)</label><input type="number" id="noodleThick" value="1.2" step="0.1" class="w-full mt-1 rounded-xl"></div>
+                        <div><label class="text-sm font-bold">🏭 产线型号</label><select id="prodLine" class="w-full mt-1 rounded-xl"><option>标准线</option><option>高速线</option></select></div>
+                    </div>
+                    <button id="generateFormula" class="w-full btn-grad text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="fa fa-magic"></i> 🚀 DeepSeek 生成配方</button>
+                    
+                    <div class="mt-8 bg-white/50 rounded-2xl p-5">
+                        <h3 class="font-black">📋 AI配方单</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">高筋粉</span><p id="flour" class="text-xl font-black">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">纯净水</span><p id="water" class="text-xl font-black">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">食用盐</span><p id="salt" class="text-xl font-black">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">酱料</span><p id="flavor" class="text-xl font-black">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">食用油</span><p id="oil" class="text-xl font-black">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">和面温度</span><p id="mixTemp" class="font-bold">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">醒面时间</span><p id="restTime" class="font-bold">--</p></div>
+                            <div class="bg-white p-3 rounded-xl"><span class="text-xs text-gray-500">辣/甜</span><p id="spicySweet" class="font-bold">--</p></div>
+                        </div>
+                        <div class="mt-4 text-sm bg-amber-50 p-3 rounded-xl"><i class="fa fa-lightbulb text-amber-600"></i> <span id="prodAdviceText">选择参数后点击生成</span></div>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-5"><canvas id="globalChart" style="max-height:200px"></canvas><canvas id="tasteChart" style="max-height:200px" class="mt-4"></canvas></div>
+            </div>
+            
+            <div class="lg:col-span-2 space-y-7">
+                <div class="glass-card p-5 sticky top-24">
+                    <h3 class="font-black text-gray-800 text-lg mb-3"><i class="fa fa-robot text-rose-500 mr-2"></i>🤖 DeepSeek AI 助手</h3>
+                    <div id="chatContent" class="h-96 overflow-y-auto p-3 bg-amber-50/40 rounded-2xl mb-3 space-y-3">
+                        <div class="flex gap-2"><div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center"><i class="fa fa-robot text-rose-500"></i></div><div class="chat-bubble-bot px-4 py-2"><p class="text-sm">🌏 您好！我是DeepSeek大语言模型，可以回答任何问题。</p></div></div>
+                    </div>
+                    <div class="flex gap-2"><input type="text" id="chatInput" placeholder="输入任何问题..." class="flex-1 p-3 border rounded-xl"><button id="sendChat" class="bg-rose-600 text-white px-5 rounded-xl"><i class="fa fa-paper-plane"></i></button></div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <button class="quickQ text-xs bg-white border px-2 py-1 rounded-full" data-q="中国出口擀面皮到美国需要什么资质？">🇨🇳→🇺🇸 出口资质</button>
+                        <button class="quickQ text-xs bg-white border px-2 py-1 rounded-full" data-q="马来西亚清真认证怎么办理？">🕌 清真认证</button>
+                        <button class="quickQ text-xs bg-white border px-2 py-1 rounded-full" data-q="如何降低生产成本？">💰 成本优化</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateFormula').addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> AI思考中...';
+            try {
+                const res = await axios.post('/api/formula', {
+                    country: document.getElementById('globalCountry').value,
+                    province: '主要',
+                    city: '中心',
+                    district: '主要',
+                    taste: document.getElementById('tastePref').value,
+                    batch: document.getElementById('batchWeight').value,
+                    thickness: document.getElementById('noodleThick').value,
+                    line: document.getElementById('prodLine').value
+                });
+                let f = res.data;
+                document.getElementById('flour').innerHTML = f.flour + ' g';
+                document.getElementById('water').innerHTML = f.water + ' g';
+                document.getElementById('salt').innerHTML = f.salt + ' g';
+                document.getElementById('flavor').innerHTML = (f.flavorWeight || 0) + ' g';
+                document.getElementById('oil').innerHTML = (f.oilWeight || 0) + ' g';
+                document.getElementById('mixTemp').innerHTML = (f.mixTemp || 22) + ' °C';
+                document.getElementById('restTime').innerHTML = (f.restTime || 30) + ' min';
+                document.getElementById('spicySweet').innerHTML = `🌶️ ${f.spicy||5}/10 🍬 ${f.sweet||5}/10`;
+                document.getElementById('prodAdviceText').innerHTML = f.advice || '标准工艺';
+            } catch(e) {
+                document.getElementById('prodAdviceText').innerHTML = '❌ 服务异常，请稍后重试';
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fa fa-magic"></i> 🚀 DeepSeek 生成配方';
+            }
+        });
+        
+        new Chart(document.getElementById('globalChart'), { type:'doughnut', data:{ labels:['中国','东南亚','东亚','北美'], datasets:[{ data:[30,35,15,20], backgroundColor:['#E63946','#F4A261','#2A9D8F','#1D3557'] }] } });
+        new Chart(document.getElementById('tasteChart'), { type:'line', data:{ labels:['Q1','Q2','Q3','Q4'], datasets:[{ label:'甜辣需求', data:[78,85,92,96], borderColor:'#E63946' }] } });
+        
+        const chatDiv = document.getElementById('chatContent');
+        const chatInp = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendChat');
+        
+        function addMsg(text, isUser) {
+            let div = document.createElement('div');
+            div.className = `flex gap-2 ${isUser ? 'justify-end' : 'justify-start'} mb-3`;
+            div.innerHTML = isUser ? 
+                `<div class="chat-bubble-user px-4 py-2 max-w-[85%]"><p class="text-sm">${escapeHtml(text)}</p></div>` :
+                `<div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center"><i class="fa fa-robot text-rose-500"></i></div><div class="chat-bubble-bot px-4 py-2 max-w-[85%]"><p class="text-sm">${escapeHtml(text)}</p></div>`;
+            chatDiv.appendChild(div);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        function escapeHtml(s) { return s.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+        
+        sendBtn.onclick = async () => {
+            let q = chatInp.value.trim();
+            if (!q) return;
+            addMsg(q, true);
+            chatInp.value = '';
+            addMsg('🤔 思考中...', false);
+            try {
+                const res = await axios.post('/api/chat', { messages: [{ role: 'user', content: q }] });
+                chatDiv.removeChild(chatDiv.lastChild);
+                addMsg(res.data.choices[0].message.content, false);
+            } catch(e) {
+                chatDiv.removeChild(chatDiv.lastChild);
+                addMsg('❌ 服务异常，请稍后重试', false);
+            }
+        };
+        document.querySelectorAll('.quickQ').forEach(btn => {
+            btn.onclick = () => { chatInp.value = btn.getAttribute('data-q'); sendBtn.click(); };
+        });
+        
+        // KPI点击
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.onclick = () => {
+                if(card.getAttribute('data-kpi') === 'capacity') {
+                    let newVal = Math.floor(2860 + Math.random() * 400);
+                    document.getElementById('capacityValue').innerHTML = newVal + ' <span class="text-sm">kg</span>';
+                }
+                if(card.getAttribute('data-kpi') === 'orders') {
+                    let cnt = parseInt(document.getElementById('orderCount').innerText) + 1;
+                    document.getElementById('orderCount').innerHTML = cnt + ' <span class="text-sm">个地区</span>';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
